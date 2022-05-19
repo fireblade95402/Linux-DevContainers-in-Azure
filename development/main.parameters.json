@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "development-wip"
+      "value": "development-test"
     },
     "secretsKeyVault": {
       "value": {
@@ -149,7 +149,7 @@
     "vms": {
       "value": [
         {
-          "name": "dev-vm",
+          "name": "mark1",
           "adminUsername": "azureuser",
           "vmSize": "Standard_DS1_v2",
           "keyVaultSSHKey": "sshkey",
