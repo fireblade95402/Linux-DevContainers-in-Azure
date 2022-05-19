@@ -1,13 +1,16 @@
 
 param location string
+param vmName string
+param nicName string
 param vm object
 param vnetName string
+param osDiskName string
 
 @secure()
 param sshkey string
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
-  name: '${vm.name}-nic'
+  name: nicName
   location: location
   properties: {
     ipConfigurations: [
@@ -15,6 +18,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Static'
+          privateIPAddress: vm.ipaddress
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, vm.subnet)
           }
@@ -25,7 +29,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
-  name: vm.name
+  name: vmName
   location: location
   tags: {
     enabled: 'true'
@@ -39,12 +43,23 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
     }
     storageProfile: {
       imageReference: vm.imageReference
-      osDisk: {}
+      osDisk: {
+          name: osDiskName
+          osType: vm.osDisk.osType
+          createOption:vm.osDisk.createOption
+          caching: vm.osDisk.caching
+          managedDisk: {
+           storageAccountType:vm.osDisk.managedDisk.storageAccountType
+          }
+          deleteOption: vm.osDisk.deleteOption
+          diskSizeGB: vm.osDisk.diskSizeGB
+      }
       dataDisks: []
     }
     osProfile: {
-      computerName: vm.name
+      computerName: vmName
       adminUsername: vm.adminUsername
+      customData: loadFileAsBase64('../scripts/docker-cloud-init.txt')
       linuxConfiguration: {
         disablePasswordAuthentication: true
         ssh: {
@@ -63,7 +78,6 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
       }
       secrets: []
       allowExtensionOperations: true
-      requireGuestProvisionSignal: true
     }
     networkProfile: {
       networkInterfaces: [

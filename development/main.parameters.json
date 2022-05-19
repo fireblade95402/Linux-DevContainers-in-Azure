@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "development-test"
+      "value": "development-wip"
     },
     "secretsKeyVault": {
       "value": {
@@ -149,16 +149,27 @@
     "vms": {
       "value": [
         {
-          "name": "dev1-vm",
+          "name": "dev-vm",
           "adminUsername": "azureuser",
           "vmSize": "Standard_DS1_v2",
           "keyVaultSSHKey": "sshkey",
           "subnet": "backend",
+          "ipaddress": "10.1.2.5",
           "imageReference": {
             "publisher": "Canonical",
             "offer": "UbuntuServer",
             "sku": "18.04-LTS",
             "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Linux",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "deleteOption": "Detach",
+            "diskSizeGB": 30
           }
         }
       ]

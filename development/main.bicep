@@ -107,6 +107,9 @@ module virtualMachines '../modules/vm.bicep' = [for vm in vms :{
   scope: rg
   params: {
     location: location
+    vmName: replace(names.outputs.resourceName, '[PH]', 'vm')
+    nicName: replace(names.outputs.resourceName, '[PH]', 'vm-nic')
+    osDiskName: replace(names.outputs.resourceName, '[PH]', 'vm-osdisk')
     vm: vm
     sshkey: keyVault.getSecret(vm.keyVaultSSHKey)
     vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
