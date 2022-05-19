@@ -3,6 +3,7 @@ param vnetName string
 param vnetAddressPrefix string
 param subNets array
 param nsgName string
+param customdns array
 
 targetScope = 'resourceGroup'
 
@@ -22,6 +23,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
         delegations: subnet.delegations
       }
     }]
+    dhcpOptions: {
+      dnsServers: customdns
+    }
   }
 }
 

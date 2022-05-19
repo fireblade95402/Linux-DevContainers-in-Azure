@@ -69,3 +69,4 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-09-01'
 }
 
 
+output ipaddress string = containerGroup.properties.ipAddress.ip

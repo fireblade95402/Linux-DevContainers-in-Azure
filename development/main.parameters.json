@@ -2,11 +2,22 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "resourceGroup": {
+    "resourceGroupName": {
       "value": "development-test"
     },
-    "defaultPrefix": {
-      "value": "dev4"
+    "secretsKeyVault": {
+      "value": {
+        "kvName": "mykeyvaultmwg",
+        "resourceGroup": "Shared"
+      }
+    },
+    "namingConvension": {
+      "value": {
+        "environment": "development",
+        "function": "vscode",
+        "index": 1,
+        "teamName": "csa"
+      }
     },
     "location": {
       "value": "uksouth"
@@ -130,8 +141,27 @@
         "sku": "Basic",
         "type": "Vpn",
         "addressPrefix": "172.16.24.0/24",
-        "generation": "Generation1"
+        "subnet": "GatewaySubnet",
+        "generation": "Generation1",
+        "keyVaultP2SCert": "p2sroot"
       }
+    },
+    "vms": {
+      "value": [
+        {
+          "name": "dev1-vm",
+          "adminUsername": "azureuser",
+          "vmSize": "Standard_DS1_v2",
+          "keyVaultSSHKey": "sshkey",
+          "subnet": "backend",
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          }
+        }
+      ]
     }
   }
 }
