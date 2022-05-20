@@ -79,9 +79,13 @@
         "memoryInGb": 0.5,
         "protocol": "UDP",
         "restartPolicy": "Always",
-        "gitrepourl": "https://github.com/Sam-Rowe/Remote-DevContainers-Extras",
+        "gitrepourl": "https://github.com/fireblade95402/Remote-DevContainers-Extras",
         "gitrepomountpath": "/config",
-        "commandline": "/coredns -conf /config/host/$corednsFile",
+        "commandline": [
+          "/coredns",
+          "-conf",
+          "/config/host/Corefile"
+        ],
         "subnet": "customdns"
       }
     },

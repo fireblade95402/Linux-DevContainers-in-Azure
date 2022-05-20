@@ -15,9 +15,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-09-01'
       {
         name: aciName
         properties: {
-          command: [
-            aci.commandline
-          ]
+          command: aci.commandline
           image: aci.image
           ports: [
             {
