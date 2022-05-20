@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "dev-vscode-2"
+      "value": "dev-vscode"
     },
     "secretsKeyVault": {
       "value": {
