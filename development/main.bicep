@@ -10,6 +10,8 @@ param vms array
 
 
 //command to deploy:  az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json 
+//Note: cool way to start/stop vm's: https://docs.microsoft.com/en-gb/azure/azure-functions/start-stop-vms/overview
+
 // Setting target scope
 targetScope = 'subscription'
 
@@ -21,6 +23,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   location: location
 }
 
+// Naming Convernsion module for all resources being creating
 module names '../modules/namingconvension.bicep' = {
   name: 'namingconvention'
   scope: rg
@@ -32,12 +35,13 @@ module names '../modules/namingconvension.bicep' = {
   }
 }
 
+//KeyVault to pull secrets from
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: secretsKeyVault.kvName
   scope: resourceGroup(secretsKeyVault.resourceGroup )
 }
 
-
+//Create VNET
 module vnet '../modules/vnet.bicep' = {
   name: 'vnetdeploy'
   scope: rg
@@ -51,7 +55,7 @@ module vnet '../modules/vnet.bicep' = {
   }
 }
 
-
+//Create Azure Container Instance for custom DNS
 module container '../modules/aci.bicep' = {
   name: 'acideploy'
   scope: rg
@@ -66,6 +70,7 @@ module container '../modules/aci.bicep' = {
   ]
 }
 
+//Update VNET with custom DNS Ip Address
 module vnetupdate '../modules/vnet.bicep' = {
   name: 'vnetupdatedeploy'
   scope: rg
@@ -84,6 +89,7 @@ module vnetupdate '../modules/vnet.bicep' = {
   ]
 }
 
+//Creating VPN Gateway
 module vpngateway '../modules/vpngateway.bicep' = {
   name: 'vpndeploy'
   scope: rg
@@ -101,7 +107,7 @@ module vpngateway '../modules/vpngateway.bicep' = {
 }
 
 
-
+//Creating developement VM's
 module virtualMachines '../modules/vm.bicep' = [for vm in vms :{
   name: '${vm.name}-vmdeploy'
   scope: rg
