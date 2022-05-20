@@ -1,0 +1,18 @@
+{
+    "securityRules": [
+      {
+        "name": "Internal-Only",
+        "properties": {
+          "priority": 200,
+          "access": "Allow",
+          "direction": "Inbound",
+          "protocol": "Tcp",
+          "sourcePortRange": "*",
+          "sourceAddressPrefix": "VirtualNetwork",
+          "destinationAddressPrefix": "*",
+          "destinationPortRange": "*"
+        }
+      }
+    
+    ]
+  }

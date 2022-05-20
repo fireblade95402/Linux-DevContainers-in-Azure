@@ -8,6 +8,7 @@ param aci object
 param vpn object
 param vms array
 
+var sharedRules = json(loadTextContent('./shared-rules.json')).securityRules
 
 //command to deploy:  az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json 
 //Note: cool way to start/stop vm's: https://docs.microsoft.com/en-gb/azure/azure-functions/start-stop-vms/overview
@@ -41,6 +42,19 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   scope: resourceGroup(secretsKeyVault.resourceGroup )
 }
 
+
+
+//Create NSG's
+module nsg '../modules/nsg.bicep' = [for subnet in subNets: if (concat(subnet.securityRules, sharedRules) != [] || subnet.specialSubnet == false) {
+  name: 'nsg-deployment-${subnet.name}'
+  scope: rg
+  params: {
+    location: location
+    nsgName: '${subnet.name}-${replace(names.outputs.resourceName, '[PH]', 'nsg')}'
+    secRules: concat(subnet.securityRules, sharedRules)
+  }
+}]
+
 //Create VNET
 module vnet '../modules/vnet.bicep' = {
   name: 'vnetdeploy'
@@ -53,6 +67,9 @@ module vnet '../modules/vnet.bicep' = {
     nsgName: replace(names.outputs.resourceName, '[PH]', 'nsg')
     customdns: []
   }
+  dependsOn: [
+    nsg
+  ]
 }
 
 //Create Azure Container Instance for custom DNS

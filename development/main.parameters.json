@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "development-test"
+      "value": "dev-vscode-2"
     },
     "secretsKeyVault": {
       "value": {
@@ -16,7 +16,7 @@
         "environment": "development",
         "function": "vscode",
         "index": 1,
-        "teamName": "csa"
+        "teamName": "private"
       }
     },
     "location": {
@@ -30,47 +30,22 @@
         {
           "name": "GatewaySubnet",
           "addressSpace": "10.1.255.0/27",
+          "specialSubnet": true,
           "securityRules": [],
           "delegations": []
         },
         {
           "name": "shared",
           "addressSpace": "10.1.0.0/24",
-          "securityRules": [
-            {
-              "name": "Internal-Only",
-              "properties": {
-                "priority": 200,
-                "access": "Allow",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourceAddressPrefix": "VirtualNetwork",
-                "destinationAddressPrefix": "*",
-                "destinationPortRange": "*"
-              }
-            }
-          ],
+          "specialSubnet": false,
+          "securityRules": [],
           "delegations": []
         },
         {
           "name": "customdns",
           "addressSpace": "10.1.3.0/24",
-          "securityRules": [
-            {
-              "name": "Internal-Only",
-              "properties": {
-                "priority": 200,
-                "access": "Allow",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourceAddressPrefix": "VirtualNetwork",
-                "destinationAddressPrefix": "*",
-                "destinationPortRange": "*"
-              }
-            }
-          ],
+          "specialSubnet": false,
+          "securityRules": [],
           "delegations": [
             {
               "name": "delegationService",
@@ -83,41 +58,15 @@
         {
           "name": "backend",
           "addressSpace": "10.1.2.0/24",
-          "securityRules": [
-            {
-              "name": "Internal-Only",
-              "properties": {
-                "priority": 200,
-                "access": "Allow",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourceAddressPrefix": "VirtualNetwork",
-                "destinationAddressPrefix": "*",
-                "destinationPortRange": "*"
-              }
-            }
-          ],
+          "specialSubnet": false,
+          "securityRules": [],
           "delegations": []
         },
         {
           "name": "frontend",
           "addressSpace": "10.1.1.0/24",
-          "securityRules": [
-            {
-              "name": "Internal-Only",
-              "properties": {
-                "priority": 200,
-                "access": "Allow",
-                "direction": "Inbound",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "sourceAddressPrefix": "VirtualNetwork",
-                "destinationAddressPrefix": "*",
-                "destinationPortRange": "*"
-              }
-            }
-          ],
+          "specialSubnet": false,
+          "securityRules": [],
           "delegations": []
         }
       ]
@@ -149,7 +98,7 @@
     "vms": {
       "value": [
         {
-          "name": "mark1",
+          "name": "dev",
           "adminUsername": "azureuser",
           "vmSize": "Standard_DS1_v2",
           "keyVaultSSHKey": "sshkey",
