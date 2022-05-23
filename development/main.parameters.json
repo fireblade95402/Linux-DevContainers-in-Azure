@@ -79,12 +79,12 @@
         "memoryInGb": 0.5,
         "protocol": "UDP",
         "restartPolicy": "Always",
-        "gitrepourl": "https://github.com/fireblade95402/Remote-DevContainers-Extras",
+        "gitrepourl": "https://github.com/fireblade95402/bicep",
         "gitrepomountpath": "/config",
         "commandline": [
           "/coredns",
           "-conf",
-          "/config/host/Corefile"
+          "/config/scripts/Corefile"
         ],
         "subnet": "customdns"
       }
