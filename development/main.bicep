@@ -1,13 +1,16 @@
 param resourceGroupName string
 param location string  
+
 param secretsKeyVault object
 param namingConvension object
-param vnetAddressPrefix string
-param subNets array
-param aci object
-param vpn object
-param vms array
 
+//parameters for standing of platform
+param vnet_object object 
+param aci_object object
+param vpn_object object
+param vm_object_array array
+
+//Loads a list of default shared rules for NSG's
 var sharedRules = json(loadTextContent('./shared-rules.json')).securityRules
 
 //command to deploy:  az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json 
@@ -25,7 +28,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
 }
 
 // Naming Convernsion module for all resources being creating
-module names '../modules/namingconvension.bicep' = {
+module names '../modules/namingconvension.bicep' =  {
   name: 'namingconvention'
   scope: rg
   params: {
@@ -42,15 +45,23 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   scope: resourceGroup(secretsKeyVault.resourceGroup )
 }
 
+//Default names for resoruces using the namingconversion module
+var nsgNameSuffix = replace(names.outputs.resourceName, '[PH]', 'nsg')
+var vnetName = replace(names.outputs.resourceName, '[PH]', 'vnet')
+var aciName = replace(names.outputs.resourceName, '[PH]', 'aci')
+var vpnName = replace(names.outputs.resourceName, '[PH]', 'vpn')
+var vpnPipName = replace(names.outputs.resourceName, '[PH]', 'vpn-pip')
+var vmNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm')
+var vmNicNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm-nic')
+var vmOsDiskNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm-osdisk')
 
-
-//Create NSG's
-module nsg '../modules/nsg.bicep' = [for subnet in subNets: if (concat(subnet.securityRules, sharedRules) != [] || subnet.specialSubnet == false) {
+//Create NSG's for all non-special subnets
+module nsg '../modules/nsg.bicep' = [for subnet in vnet_object.subnets: if (subnet.specialSubnet == false) {
   name: 'nsg-deployment-${subnet.name}'
   scope: rg
   params: {
     location: location
-    nsgName: '${subnet.name}-${replace(names.outputs.resourceName, '[PH]', 'nsg')}'
+    nsgName: '${subnet.name}-${nsgNameSuffix}'
     secRules: concat(subnet.securityRules, sharedRules)
   }
 }]
@@ -60,11 +71,10 @@ module vnet '../modules/vnet.bicep' = {
   name: 'vnetdeploy'
   scope: rg
   params: {
-    vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
+    vnetName: vnetName
     location: location
-    vnetAddressPrefix: vnetAddressPrefix
-    subNets: subNets
-    nsgName: replace(names.outputs.resourceName, '[PH]', 'nsg')
+    vnet_object: vnet_object
+    nsgNameSuffix: nsgNameSuffix
     customdns: []
   }
   dependsOn: [
@@ -78,9 +88,9 @@ module container '../modules/aci.bicep' = {
   scope: rg
   params: {
     location: location
-    aciName: replace(names.outputs.resourceName, '[PH]', 'aci')
-    aci: aci
-    vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
+    aciName: aciName
+    aci: aci_object
+    vnetName: vnetName
   }
   dependsOn: [
     vnet
@@ -92,11 +102,10 @@ module vnetupdate '../modules/vnet.bicep' = {
   name: 'vnetupdatedeploy'
   scope: rg
   params: {
-    vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
+    vnetName: vnetName
     location: location
-    vnetAddressPrefix: vnetAddressPrefix
-    subNets: subNets
-    nsgName: replace(names.outputs.resourceName, '[PH]', 'nsg')
+    vnet_object: vnet_object
+    nsgNameSuffix: nsgNameSuffix
     customdns: [
       container.outputs.ipaddress
     ]
@@ -112,11 +121,11 @@ module vpngateway '../modules/vpngateway.bicep' = {
   scope: rg
   params: {
     location: location
-    vpnName: replace(names.outputs.resourceName, '[PH]', 'vpn')
-    vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
-    pipName:  replace(names.outputs.resourceName, '[PH]', 'vpn-pip')
-    vpn: vpn
-    p2scert: keyVault.getSecret(vpn.keyVaultP2SCert)
+    vpnName: vpnName
+    vnetName: vnetName
+    pipName:  vpnPipName
+    vpn: vpn_object
+    p2scert: keyVault.getSecret(vpn_object.keyVaultP2SCert)
   }
   dependsOn: [
     vnetupdate
@@ -124,18 +133,18 @@ module vpngateway '../modules/vpngateway.bicep' = {
 }
 
 
-//Creating developement VM's
-module virtualMachines '../modules/vm.bicep' = [for vm in vms :{
+//Creating  VM's
+module virtualMachines '../modules/vm.bicep' = [for vm in vm_object_array :{
   name: '${vm.name}-vmdeploy'
   scope: rg
   params: {
     location: location
-    vmName: '${vm.name}-${replace(names.outputs.resourceName, '[PH]', 'vm')}'
-    nicName: '${vm.name}-${replace(names.outputs.resourceName, '[PH]', 'vm-nic')}'
-    osDiskName: '${vm.name}-${replace(names.outputs.resourceName, '[PH]', 'vm-osdisk')}'
+    vmName: '${vm.name}-${vmNameSuffix}'
+    nicName: '${vm.name}-${vmNicNameSuffix}'
+    osDiskName: '${vm.name}-${vmOsDiskNameSuffix}'
     vm: vm
     sshkey: keyVault.getSecret(vm.keyVaultSSHKey)
-    vnetName: replace(names.outputs.resourceName, '[PH]', 'vnet')
+    vnetName: vnetName
 
   }
   dependsOn: [

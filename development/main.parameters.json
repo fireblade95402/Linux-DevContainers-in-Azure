@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "dev-vscode"
+      "value": "dev-vscode-dev"
     },
     "secretsKeyVault": {
       "value": {
@@ -22,56 +22,56 @@
     "location": {
       "value": "uksouth"
     },
-    "vnetAddressPrefix": {
-      "value": "10.1.0.0/16"
-    },
-    "subNets": {
-      "value": [
-        {
-          "name": "GatewaySubnet",
-          "addressSpace": "10.1.255.0/27",
-          "specialSubnet": true,
-          "securityRules": [],
-          "delegations": []
-        },
-        {
-          "name": "shared",
-          "addressSpace": "10.1.0.0/24",
-          "specialSubnet": false,
-          "securityRules": [],
-          "delegations": []
-        },
-        {
-          "name": "customdns",
-          "addressSpace": "10.1.3.0/24",
-          "specialSubnet": false,
-          "securityRules": [],
-          "delegations": [
+    "vnet_object": {
+      "value": {
+          "addressPrefix": "10.1.0.0/16",
+          "subnets" : [
             {
-              "name": "delegationService",
-              "properties": {
-                "serviceName": "Microsoft.ContainerInstance/containerGroups"
-              }
+              "name": "GatewaySubnet",
+              "addressSpace": "10.1.255.0/27",
+              "specialSubnet": true,
+              "securityRules": [],
+              "delegations": []
+            },
+            {
+              "name": "shared",
+              "addressSpace": "10.1.0.0/24",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": []
+            },
+            {
+              "name": "customdns",
+              "addressSpace": "10.1.3.0/24",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": [
+                {
+                  "name": "delegationService",
+                  "properties": {
+                    "serviceName": "Microsoft.ContainerInstance/containerGroups"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "backend",
+              "addressSpace": "10.1.2.0/24",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": []
+            },
+            {
+              "name": "frontend",
+              "addressSpace": "10.1.1.0/24",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": []
             }
           ]
-        },
-        {
-          "name": "backend",
-          "addressSpace": "10.1.2.0/24",
-          "specialSubnet": false,
-          "securityRules": [],
-          "delegations": []
-        },
-        {
-          "name": "frontend",
-          "addressSpace": "10.1.1.0/24",
-          "specialSubnet": false,
-          "securityRules": [],
-          "delegations": []
         }
-      ]
     },
-    "aci": {
+    "aci_object": {
       "value": {
         "image": "coredns/coredns:latest",
         "port": 53,
@@ -79,17 +79,17 @@
         "memoryInGb": 0.5,
         "protocol": "UDP",
         "restartPolicy": "Always",
-        "gitrepourl": "https://github.com/fireblade95402/bicep",
+        "gitrepourl": "https://github.com/fireblade95402/Remote-DevContainers-Extras",
         "gitrepomountpath": "/config",
         "commandline": [
           "/coredns",
           "-conf",
-          "/config/scripts/Corefile"
+          "/config/host/Corefile"
         ],
         "subnet": "customdns"
       }
     },
-    "vpn": {
+    "vpn_object": {
       "value": {
         "sku": "Basic",
         "type": "Vpn",
@@ -99,7 +99,7 @@
         "keyVaultP2SCert": "p2sroot"
       }
     },
-    "vms": {
+    "vm_object_array": {
       "value": [
         {
           "name": "dev",

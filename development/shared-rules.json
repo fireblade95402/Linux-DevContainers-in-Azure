@@ -1,30 +1,3 @@
 {
-    "securityRules": [
-      {
-        "name": "AllowVnetInbound2",
-        "properties": {
-          "priority": 200,
-          "access": "Allow",
-          "direction": "Inbound",
-          "protocol": "*",
-          "sourcePortRange": "*",
-          "sourceAddressPrefix": "VirtualNetwork",
-          "destinationAddressPrefix": "VirtualNetwork",
-          "destinationPortRange": "*"
-        }
-      },
-      {
-        "name": "AllowAzureLoadBalancerInBound2",
-        "properties": {
-          "priority": 210,
-          "access": "Allow",
-          "direction": "Inbound",
-          "protocol": "*",
-          "sourcePortRange": "*",
-          "sourceAddressPrefix": "AzureLoadBalancer",
-          "destinationAddressPrefix": "*",
-          "destinationPortRange": "*"
-        }
-      }
-    ]
+    "securityRules": []
   }
