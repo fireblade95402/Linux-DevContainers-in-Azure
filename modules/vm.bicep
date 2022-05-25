@@ -1,16 +1,49 @@
 
+// This module creates an Azure Virtual MAchines for vscode development.
+// Parameter example
+// "vm_object_array": {
+//   "value": [
+//     {
+//       "name": "dev",
+//       "adminUsername": "azureuser",
+//       "vmSize": "Standard_DS1_v2",
+//       "keyVaultSSHKey": "sshkey",
+//       "subnet": "backend",
+//       "ipaddress": "10.1.2.5",
+//       "imageReference": {
+//         "publisher": "Canonical",
+//         "offer": "UbuntuServer",
+//         "sku": "18.04-LTS",
+//         "version": "latest"
+//       },
+//       "osDisk": {
+//         "osType": "Linux",
+//         "createOption": "FromImage",
+//         "caching": "ReadWrite",
+//         "managedDisk": {
+//           "storageAccountType": "Premium_LRS"
+//         },
+//         "deleteOption": "Detach",
+//         "diskSizeGB": 30
+//       }
+//     }
+//   ]
+// }
+
+// vmName : Name of the VM
+// nicNAme : Name of the NIC to be created
+// vnetName : Name of vnet to link too via a subnet
+// osDiskName : Name of the OS Disk to create
+
 param location string
-param vmName string
-param nicName string
-param vm object
-param vnetName string
-param osDiskName string
+param vm_object object
+param naming object
 
 @secure()
 param sshkey string
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
-  name: nicName
+  name: '${naming.networkInterface.name}-${naming.virtualMachine.slug}-${vm_object.name}'
   location: location
   properties: {
     ipConfigurations: [
@@ -18,9 +51,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Static'
-          privateIPAddress: vm.ipaddress
+          privateIPAddress: vm_object.ipaddress
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, vm.subnet)
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', naming.virtualNetwork.name, vm_object.subnet)
           }
         }
       }
@@ -29,7 +62,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
-  name: vmName
+  name: '${naming.virtualMachine.name}-${vm_object.name}'
   location: location
   tags: {
     enabled: 'true'
@@ -39,33 +72,33 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: vm.vmSize
+      vmSize: vm_object.vmSize
     }
     storageProfile: {
-      imageReference: vm.imageReference
+      imageReference: vm_object.imageReference
       osDisk: {
-          name: osDiskName
-          osType: vm.osDisk.osType
-          createOption:vm.osDisk.createOption
-          caching: vm.osDisk.caching
+          name: '${naming.managedDisk.name}-${vm_object.name}'
+          osType: vm_object.osDisk.osType
+          createOption:vm_object.osDisk.createOption
+          caching: vm_object.osDisk.caching
           managedDisk: {
-           storageAccountType:vm.osDisk.managedDisk.storageAccountType
+           storageAccountType:vm_object.osDisk.managedDisk.storageAccountType
           }
-          deleteOption: vm.osDisk.deleteOption
-          diskSizeGB: vm.osDisk.diskSizeGB
+          deleteOption: vm_object.osDisk.deleteOption
+          diskSizeGB: vm_object.osDisk.diskSizeGB
       }
       dataDisks: []
     }
     osProfile: {
-      computerName: vmName
-      adminUsername: vm.adminUsername
+      computerName: '${naming.virtualMachine.name}-${vm_object.name}'
+      adminUsername: vm_object.adminUsername
       customData: loadFileAsBase64('../scripts/docker-cloud-init.txt')
       linuxConfiguration: {
         disablePasswordAuthentication: true
         ssh: {
           publicKeys: [
             {
-              path: '/home/${vm.adminUsername}/.ssh/authorized_keys'
+              path: '/home/${vm_object.adminUsername}/.ssh/authorized_keys'
               keyData: sshkey
             }
           ]

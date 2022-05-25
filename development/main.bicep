@@ -19,23 +19,23 @@ var sharedRules = json(loadTextContent('./shared-rules.json')).securityRules
 // Setting target scope
 targetScope = 'subscription'
 
-
-
 // Creating resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   name: resourceGroupName
   location: location
 }
 
-// Naming Convernsion module for all resources being creating
-module names '../modules/namingconvension.bicep' =  {
-  name: 'namingconvention'
+module naming '../modules/naming.bicep' = {
+  name: 'NamingDeployment'
   scope: rg
   params: {
-    environment: namingConvension.environment
-    function:  namingConvension.function
-    index:  namingConvension.index
-    teamName:  namingConvension.teamName
+    location: location
+    suffix: [
+      namingConvension.application
+      namingConvension.environment
+    ]
+    uniqueLength: 6
+    uniqueSeed: rg.id
   }
 }
 
@@ -45,23 +45,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   scope: resourceGroup(secretsKeyVault.resourceGroup )
 }
 
-//Default names for resoruces using the namingconversion module
-var nsgNameSuffix = replace(names.outputs.resourceName, '[PH]', 'nsg')
-var vnetName = replace(names.outputs.resourceName, '[PH]', 'vnet')
-var aciName = replace(names.outputs.resourceName, '[PH]', 'aci')
-var vpnName = replace(names.outputs.resourceName, '[PH]', 'vpn')
-var vpnPipName = replace(names.outputs.resourceName, '[PH]', 'vpn-pip')
-var vmNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm')
-var vmNicNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm-nic')
-var vmOsDiskNameSuffix =  replace(names.outputs.resourceName, '[PH]', 'vm-osdisk')
-
 //Create NSG's for all non-special subnets
 module nsg '../modules/nsg.bicep' = [for subnet in vnet_object.subnets: if (subnet.specialSubnet == false) {
   name: 'nsg-deployment-${subnet.name}'
   scope: rg
   params: {
     location: location
-    nsgName: '${subnet.name}-${nsgNameSuffix}'
+    naming: naming.outputs.names
+    suffix: subnet.name
     secRules: concat(subnet.securityRules, sharedRules)
   }
 }]
@@ -71,10 +62,9 @@ module vnet '../modules/vnet.bicep' = {
   name: 'vnetdeploy'
   scope: rg
   params: {
-    vnetName: vnetName
+    naming: naming.outputs.names
     location: location
     vnet_object: vnet_object
-    nsgNameSuffix: nsgNameSuffix
     customdns: []
   }
   dependsOn: [
@@ -88,9 +78,8 @@ module container '../modules/aci.bicep' = {
   scope: rg
   params: {
     location: location
-    aciName: aciName
-    aci: aci_object
-    vnetName: vnetName
+    naming: naming.outputs.names
+    aci_object: aci_object
   }
   dependsOn: [
     vnet
@@ -99,13 +88,12 @@ module container '../modules/aci.bicep' = {
 
 //Update VNET with custom DNS Ip Address
 module vnetupdate '../modules/vnet.bicep' = {
-  name: 'vnetupdatedeploy'
+  name: 'vnetdeployupdate'
   scope: rg
   params: {
-    vnetName: vnetName
+    naming: naming.outputs.names
     location: location
     vnet_object: vnet_object
-    nsgNameSuffix: nsgNameSuffix
     customdns: [
       container.outputs.ipaddress
     ]
@@ -121,9 +109,7 @@ module vpngateway '../modules/vpngateway.bicep' = {
   scope: rg
   params: {
     location: location
-    vpnName: vpnName
-    vnetName: vnetName
-    pipName:  vpnPipName
+    naming: naming.outputs.names
     vpn: vpn_object
     p2scert: keyVault.getSecret(vpn_object.keyVaultP2SCert)
   }
@@ -139,13 +125,9 @@ module virtualMachines '../modules/vm.bicep' = [for vm in vm_object_array :{
   scope: rg
   params: {
     location: location
-    vmName: '${vm.name}-${vmNameSuffix}'
-    nicName: '${vm.name}-${vmNicNameSuffix}'
-    osDiskName: '${vm.name}-${vmOsDiskNameSuffix}'
-    vm: vm
+    naming: naming.outputs.names
+    vm_object: vm
     sshkey: keyVault.getSecret(vm.keyVaultSSHKey)
-    vnetName: vnetName
-
   }
   dependsOn: [
     vnetupdate

@@ -1,17 +1,36 @@
 
-param vpnName string
+// This module creates an Azure VPN Gateway.
+// Currently used for creating  the VPN to securely connect to the VNET and VM's.
+// Parameter example
+// "vpn_object": {
+//   "value": {
+//     "sku": "Basic",
+//     "type": "Vpn",
+//     "addressPrefix": "172.16.24.0/24",
+//     "subnet": "GatewaySubnet",
+//     "generation": "Generation1",
+//     "keyVaultP2SCert": "p2sroot"
+//   }
+// }
+
+// vpmName : Name of VPN Resource to be created
+// vnetname : Name of vnet to link too via a subnet
+// pipName : Public IP Address Name for created resource
+
+
 param location string = resourceGroup().location
+param naming object
 param vpn object
-param vnetName string 
-param pipName string
 
 @secure()
 param p2scert string
 
 targetScope = 'resourceGroup'
 
+
+
 resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
-  name: pipName
+  name: '${naming.publicIp.name}-${naming.virtualNetworkGateway.slug}'
   location: location
   sku: {
     name: 'Basic'
@@ -27,7 +46,7 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2020-11-01' = {
 
 
 resource virtualNetworkGateways_dev_gw_name_resource 'Microsoft.Network/virtualNetworkGateways@2020-11-01' = {
-  name: vpnName
+  name: naming.virtualNetworkGateway.name
   location: location
   properties: {
     enablePrivateIpAddress: false
@@ -40,7 +59,7 @@ resource virtualNetworkGateways_dev_gw_name_resource 'Microsoft.Network/virtualN
             id: publicIPAddress.id
           }
           subnet: {
-            id:  resourceId('Microsoft.Network/VirtualNetworks/subnets', vnetName, vpn.subnet)
+            id:  resourceId('Microsoft.Network/VirtualNetworks/subnets', naming.virtualNetwork.name, vpn.subnet)
           }
         }
       }

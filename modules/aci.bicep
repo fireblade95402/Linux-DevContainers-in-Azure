@@ -2,7 +2,7 @@
   // This module creates an Azure COntainer Instance.
   // Currently used for creating  custome dns service for the VNET.
   // Parameter example
-  // "aci": {
+  // "aci_object": {
   //   "value": {
   //     "image": "coredns/coredns:latest",
   //     "port": 53,
@@ -24,58 +24,57 @@
   // vnetname : Name of vnet to link too via a subnet
 
 param location string = resourceGroup().location
-param aciName string 
-param aci object
-param vnetName string
+param naming object
+param aci_object object
 
 targetScope = 'resourceGroup'
 
 
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-09-01' = {
-  name: aciName
+  name:  naming.containerGroup.name
   location: location
   properties: {
     containers: [
       {
-        name: aciName
+        name: naming.containerGroup.name
         properties: {
-          command: aci.commandline
-          image: aci.image
+          command: aci_object.commandline
+          image: aci_object.image
           ports: [
             {
-              port: aci.port
-              protocol: aci.protocol
+              port: aci_object.port
+              protocol: aci_object.protocol
             }
           ]
           resources: {
             requests: {
-              cpu: aci.cpuCores
-              memoryInGB: aci.memoryInGb
+              cpu: aci_object.cpuCores
+              memoryInGB: aci_object.memoryInGb
             }
           }
           volumeMounts: [
             {
             name: 'gitrepo'
-            mountPath: aci.gitrepomountpath
+            mountPath: aci_object.gitrepomountpath
             }
           ]
         }
       }
     ]
     osType: 'Linux'
-    restartPolicy: aci.restartPolicy
+    restartPolicy: aci_object.restartPolicy
     subnetIds: [
       {
-        id: resourceId('Microsoft.Network/VirtualNetworks/subnets', vnetName, aci.subnet)
+        id: resourceId('Microsoft.Network/VirtualNetworks/subnets',  naming.virtualNetwork.name, aci_object.subnet)
       }
     ]
     ipAddress: {
       type: 'Private'
       ports: [
         {
-          port: aci.port
-          protocol: aci.protocol
+          port: aci_object.port
+          protocol: aci_object.protocol
         }
       ]
     }
@@ -84,7 +83,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-09-01'
         name: 'gitrepo'
         gitRepo: {
           directory: '.'
-          repository: aci.gitrepourl
+          repository: aci_object.gitrepourl
         }
       }
     ]

@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "dev-vscode-dev"
+      "value": "test-vscode"
     },
     "secretsKeyVault": {
       "value": {
@@ -14,9 +14,7 @@
     "namingConvension": {
       "value": {
         "environment": "development",
-        "function": "vscode",
-        "index": 1,
-        "teamName": "private"
+        "application": "vscode"
       }
     },
     "location": {

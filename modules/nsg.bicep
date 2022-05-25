@@ -20,7 +20,8 @@
 //  https://docs.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups/securityrules?tabs=json#securityrulepropertiesformat-object
 // for more information
 // ------------------------------------------------------------
-param nsgName string
+param naming object
+param suffix string
 param location string = resourceGroup().location
 param secRules array
 param tags object = {}
@@ -28,7 +29,7 @@ param tags object = {}
 targetScope = 'resourceGroup'
 
 resource nsg  'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
-  name: nsgName
+  name: suffix != '' ? '${naming.networkSecurityGroup.name}-${suffix}' :  naming.networkSecurityGroup.name
   location: location
   properties: {
     securityRules: secRules
