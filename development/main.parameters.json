@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "test-vscode"
+      "value": "prod-vscode"
     },
     "secretsKeyVault": {
       "value": {
@@ -13,7 +13,7 @@
     },
     "namingConvension": {
       "value": {
-        "environment": "development",
+        "environment": "prod",
         "application": "vscode"
       }
     },

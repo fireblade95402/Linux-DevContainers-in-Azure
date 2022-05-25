@@ -30,14 +30,10 @@
 //   ]
 // }
 
-// vmName : Name of the VM
-// nicNAme : Name of the NIC to be created
-// vnetName : Name of vnet to link too via a subnet
-// osDiskName : Name of the OS Disk to create
-
 param location string
 param vm_object object
 param naming object
+param tags object = {}
 
 @secure()
 param sshkey string

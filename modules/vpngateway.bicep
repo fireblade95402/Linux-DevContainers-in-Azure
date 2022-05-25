@@ -13,14 +13,11 @@
 //   }
 // }
 
-// vpmName : Name of VPN Resource to be created
-// vnetname : Name of vnet to link too via a subnet
-// pipName : Public IP Address Name for created resource
-
 
 param location string = resourceGroup().location
 param naming object
 param vpn object
+param tags object = {}
 
 @secure()
 param p2scert string

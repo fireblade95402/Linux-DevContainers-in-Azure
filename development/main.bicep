@@ -14,7 +14,7 @@ param vm_object_array array
 var sharedRules = json(loadTextContent('./shared-rules.json')).securityRules
 
 //command to deploy:  az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json 
-//Note: cool way to start/stop vm's: https://docs.microsoft.com/en-gb/azure/azure-functions/start-stop-vms/overview
+//Note: Way to start/stop vm's: https://docs.microsoft.com/en-gb/azure/azure-functions/start-stop-vms/overview
 
 // Setting target scope
 targetScope = 'subscription'

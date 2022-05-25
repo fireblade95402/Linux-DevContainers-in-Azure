@@ -23,14 +23,13 @@
 //     }
 // }
 
-// vnetname : Name of vnet to link too via a subnet
-// nsgNameSuffix : Suffix of the NSG created previously to link to the subnets with the subnet name added
 // customdns : IP Address of the custom DNS server. THis case created in ACI
 
 param location string = resourceGroup().location
 param naming object
 param vnet_object object
 param customdns array
+param tags object = {}
 
 targetScope = 'resourceGroup'
 

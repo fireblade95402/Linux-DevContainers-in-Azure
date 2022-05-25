@@ -20,6 +20,10 @@
 //  https://docs.microsoft.com/en-us/azure/templates/microsoft.network/networksecuritygroups/securityrules?tabs=json#securityrulepropertiesformat-object
 // for more information
 // ------------------------------------------------------------
+// naming : Naming module object
+// suffix : add suffix to name if pasted (e.g. subnet)
+// secRules : array of rules to create
+
 param naming object
 param suffix string
 param location string = resourceGroup().location
