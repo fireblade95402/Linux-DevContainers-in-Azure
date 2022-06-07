@@ -13,6 +13,8 @@
 //   }
 // }
 
+//Note: If the client doesn't connect with the correct certificate. Go to the Gateway and RESET it.
+
 
 param location string = resourceGroup().location
 param naming object
