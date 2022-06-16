@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "prod-vscode"
+      "value": "dev-vscode"
     },
     "secretsKeyVault": {
       "value": {
@@ -13,7 +13,7 @@
     },
     "namingConvension": {
       "value": {
-        "environment": "prod",
+        "environment": "dev",
         "application": "vscode"
       }
     },
@@ -22,25 +22,18 @@
     },
     "vnet_object": {
       "value": {
-          "addressPrefix": "10.1.0.0/16",
+          "addressPrefix": "10.2.0.0/25",
           "subnets" : [
             {
               "name": "GatewaySubnet",
-              "addressSpace": "10.1.255.0/27",
+              "addressSpace": "10.2.0.0/29",
               "specialSubnet": true,
               "securityRules": [],
               "delegations": []
             },
             {
-              "name": "shared",
-              "addressSpace": "10.1.0.0/24",
-              "specialSubnet": false,
-              "securityRules": [],
-              "delegations": []
-            },
-            {
               "name": "customdns",
-              "addressSpace": "10.1.3.0/24",
+              "addressSpace": "10.2.0.8/29",
               "specialSubnet": false,
               "securityRules": [],
               "delegations": [
@@ -54,14 +47,7 @@
             },
             {
               "name": "backend",
-              "addressSpace": "10.1.2.0/24",
-              "specialSubnet": false,
-              "securityRules": [],
-              "delegations": []
-            },
-            {
-              "name": "frontend",
-              "addressSpace": "10.1.1.0/24",
+              "addressSpace": "10.2.0.32/27",
               "specialSubnet": false,
               "securityRules": [],
               "delegations": []
@@ -105,7 +91,7 @@
           "vmSize": "Standard_DS1_v2",
           "keyVaultSSHKey": "sshkey",
           "subnet": "backend",
-          "ipaddress": "10.1.2.5",
+          "ipaddress": "10.2.0.37",
           "imageReference": {
             "publisher": "Canonical",
             "offer": "UbuntuServer",
