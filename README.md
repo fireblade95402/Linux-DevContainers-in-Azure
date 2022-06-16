@@ -9,6 +9,8 @@ This deploys the following into Azure using Bicep:
 
 
 
+
+
 To start with
 
 - [Walkthrough for 2 - Codespace with a VPN to a Vnet on Azure](Codesapce_with_a_vpn_to_vnet.md)
