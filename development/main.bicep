@@ -7,6 +7,7 @@ param namingConvension object
 //parameters for standing of platform
 param vnet_object object 
 param aci_object object
+param dnsresolver_object object
 param vpn_object object
 param vm_object_array array
 
@@ -72,19 +73,35 @@ module vnet '../modules/vnet.bicep' = {
   ]
 }
 
-//Create Azure Container Instance for custom DNS
-module container '../modules/aci.bicep' = {
-  name: 'acideploy'
+//ACI replaced with PRivate DNS Resolver below
+// //Create Azure Container Instance for custom DNS
+// module container '../modules/aci.bicep' = {
+//   name: 'acideploy'
+//   scope: rg
+//   params: {
+//     location: location
+//     naming: naming.outputs.names
+//     aci_object: aci_object
+//   }
+//   dependsOn: [
+//     vnet
+//   ]
+// }
+
+//Create Azure Private DNS Resolver
+module dnsresolver '../modules/dnsresolver.bicep' = {
+  name: 'dnsresolverdeploy'
   scope: rg
   params: {
     location: location
     naming: naming.outputs.names
-    aci_object: aci_object
+    dnsresolver_object: dnsresolver_object
   }
   dependsOn: [
     vnet
   ]
 }
+
 
 //Update VNET with custom DNS Ip Address
 module vnetupdate '../modules/vnet.bicep' = {
@@ -95,11 +112,11 @@ module vnetupdate '../modules/vnet.bicep' = {
     location: location
     vnet_object: vnet_object
     customdns: [
-      container.outputs.ipaddress
+      dnsresolver.outputs.ipaddress
     ]
   }
   dependsOn: [
-    container
+    dnsresolver
   ]
 }
 

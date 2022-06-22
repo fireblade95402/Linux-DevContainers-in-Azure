@@ -786,6 +786,11 @@
      nameUnique: endsWith(take(replace(nut, ph, 'pdns'), 63), d) ? take(replace(nut, ph, 'pdns'), 63-1) : take(replace(nut, ph, 'pdns'), 63)
      slug: 'pdns'
    }
+   privatednsresolver: { 
+    name: endsWith(take(replace(nt, ph, 'pdnsr'), 63), d) ? take(replace(nt, ph, 'pdnsr'), 63-1) : take(replace(nt, ph, 'pdnsr'), 63)
+    nameUnique: endsWith(take(replace(nut, ph, 'pdnsr'), 63), d) ? take(replace(nut, ph, 'pdnsr'), 63-1) : take(replace(nut, ph, 'pdnsr'), 63)
+    slug: 'pdnsr'
+  }
    publicIp: { 
      name: endsWith(take(replace(nt, ph, 'pip'), 80), d) ? take(replace(nt, ph, 'pip'), 80-1) : take(replace(nt, ph, 'pip'), 80)
      nameUnique: endsWith(take(replace(nut, ph, 'pip'), 80), d) ? take(replace(nut, ph, 'pip'), 80-1) : take(replace(nut, ph, 'pip'), 80)

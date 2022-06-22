@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "myvscode"
+      "value": "myvscode-dev"
     },
     "secretsKeyVault": {
       "value": {
@@ -46,6 +46,20 @@
               ]
             },
             {
+              "name": "dnsresolver",
+              "addressSpace": "10.2.0.16/28",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": [
+                {
+                  "name": "delegationService",
+                  "properties": {
+                    "serviceName": "Microsoft.Network/dnsResolvers"
+                  }
+                }
+              ]
+            },
+            {
               "name": "backend",
               "addressSpace": "10.2.0.32/27",
               "specialSubnet": false,
@@ -71,6 +85,11 @@
           "/config/host/Corefile"
         ],
         "subnet": "customdns"
+      }
+    },
+    "dnsresolver_object": {
+      "value": {
+        "subnet": "dnsresolver"
       }
     },
     "vpn_object": {
