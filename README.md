@@ -96,7 +96,7 @@ Below shows the architecture:
   - SSH Public Key
   - Public Root Certificate
     - > Remove the ```-----BEGIN CERTIFICATE-----``` and ```-----END CERTIFICATE-----```
-- The Bicep parameters file needs to be updated for deployment. Here's a link to an example: [template.parameters.json](development/template.parameters.json)
+- The Bicep parameters file needs to be updated for deployment. Here's a link to an example: [template.parameters.json](deploy/template.parameters.json)
 - Sections in file (Key to update **"<...>"** values ) :
   -  General  
   ```json
@@ -222,7 +222,7 @@ Below shows the architecture:
     ```
     az login --use-device-code
     ```
-  - Change to the ```development``` folder
+  - Change to the ```deploy``` folder
   - Run Bicep and use the parameters file updated and saved above
     ```
     az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json
