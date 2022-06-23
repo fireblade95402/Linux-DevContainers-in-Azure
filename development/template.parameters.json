@@ -3,22 +3,22 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "test-platform"
+      "value": "<Resource Group Name>"
     },
     "secretsKeyVault": {
       "value": {
-        "kvName": "mykeyvaultmwg",
-        "resourceGroup": "Shared"
+        "kvName": "<Name of KeyVault>",
+        "resourceGroup": "<Resource Group Name for KeyVault>"
       }
     },
     "namingConvension": {
       "value": {
-        "environment": "test",
-        "application": "vscode"
+        "environment": "<environment for naming e.g. prod>",
+        "application": "<name of application e.g. vscode>"
       }
     },
     "location": {
-      "value": "uksouth"
+      "value": "<location e.g. uksouth>"
     },
     "vnet_object": {
       "value": {
@@ -74,7 +74,7 @@
         "addressPrefix": "172.16.24.0/24",
         "subnet": "GatewaySubnet",
         "generation": "Generation1",
-        "keyVaultP2SCert": "p2sroot-public-certificate"
+        "keyVaultP2SCert": "<Secret Name from KeyVault for Public Root Certificate>"
       }
     },
     "vm_object_array": {
@@ -83,7 +83,7 @@
           "name": "dev",
           "adminUsername": "azureuser",
           "vmSize": "Standard_DS1_v2",
-          "keyVaultSSHKey": "vscodeSSH-public-key",
+          "keyVaultSSHKey": "<Secret Name from KeyVault for Public SSH Key>",
           "subnet": "backend",
           "ipaddress": "10.2.0.37",
           "imageReference": {
