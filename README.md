@@ -89,7 +89,8 @@ This will get the configuration inplace for deploying the Azure services.
 
 Below shows the architecture:
 
-![Runtime Architecture](images/architecture.png)  --todo replace ACR with Private DNS Resolver
+![Runtime Architecture](images/architecture.png)  
+>Azure Private DNS Resolver is currently in Preview
 
 
 - The following needs to be added to KeyVault as secrets, as they're used during the deployment process:
