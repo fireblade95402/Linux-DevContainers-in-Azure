@@ -6,14 +6,22 @@ param tags object = {}
 targetScope = 'resourceGroup'
 
 
-param virtualNetworks_vnet_externalid string = resourceId('Microsoft.Network/virtualNetworks',  naming.virtualNetwork.name) 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+  name: naming.virtualNetwork.name
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01'  existing = {
+  name: dnsresolver_object.subnet
+  parent: virtualNetwork
+}
+
 
 resource dnsResolvers_dnsresolver_name_resource 'Microsoft.Network/dnsResolvers@2020-04-01-preview' = {
   name: naming.privatednsresolver.name
   location: location
   properties: {
     virtualNetwork: {
-      id: virtualNetworks_vnet_externalid
+      id: virtualNetwork.id
     }
   }
 }
@@ -26,7 +34,7 @@ resource dnsResolvers_dnsresolver_name_inboundendpoint 'Microsoft.Network/dnsRes
     ipConfigurations: [
       {
         subnet: {
-          id: '${virtualNetworks_vnet_externalid}/subnets/${dnsresolver_object.subnet}'
+          id: subnet.id
         }
         privateIpAllocationMethod: 'Dynamic'
       }
