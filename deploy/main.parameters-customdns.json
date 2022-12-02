@@ -1,0 +1,122 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceGroupName": {
+      "value": "my-development"
+    },
+    "KeyVault": {
+      "value": {
+        "kvName": "myvault-mwg",
+        "resourceGroup": "Shared"
+      }
+    },
+    "namingConvension": {
+      "value": {
+        "environment": "prod",
+        "application": "vs"
+      }
+    },
+    "location": {
+      "value": "uksouth"
+    },
+    "vnet_object": {
+      "value": {
+          "addressPrefix": "10.2.0.0/25",
+          "subnets" : [
+            {
+              "name": "GatewaySubnet",
+              "addressSpace": "10.2.0.0/29",
+              "specialSubnet": true,
+              "securityRules": [],
+              "delegations": []
+            },
+            {
+              "name": "customdns",
+              "addressSpace": "10.2.0.16/28",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": [
+                {
+                  "name": "delegationService",
+                  "properties": {
+                    "serviceName": "Microsoft.ContainerInstance/containerGroups"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "backend",
+              "addressSpace": "10.2.0.32/27",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": []
+            },
+            {
+              "name": "frontend",
+              "addressSpace": "10.2.0.64/27",
+              "specialSubnet": false,
+              "securityRules": [],
+              "delegations": []
+            }
+          ]
+        }
+    },
+    "aci_object": {
+        "value": {
+          "image": "coredns/coredns:latest",
+          "port": 53,
+          "cpuCores": 1,
+          "memoryInGb": 0.5,
+          "protocol": "UDP",
+          "restartPolicy": "Always",
+          "gitrepourl": "https://github.com/fireblade95402/DevContainers-in-Azure-with-Bicep",
+          "gitrepomountpath": "/config",
+          "commandline": [
+            "/coredns",
+            "-conf",
+            "/config/scripts/Corefile"
+          ],
+          "subnet": "customdns"
+        }
+      },
+    "vpn_object": {
+      "value": {
+        "sku": "Basic",
+        "type": "Vpn",
+        "addressPrefix": "172.16.24.0/24",
+        "subnet": "GatewaySubnet",
+        "generation": "Generation1",
+        "keyVaultP2SCert": "development-cert"
+      }
+    },
+    "vm_object_array": {
+      "value": [
+        {
+          "name": "dev",
+          "adminUsername": "azureuser",
+          "vmSize": "Standard_DS1_v2",
+          "keyVaultSSHKey": "ssh-development-public",
+          "subnet": "backend",
+          "ipaddress": "10.2.0.37",
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Linux",
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "deleteOption": "Detach",
+            "diskSizeGB": 128
+          }
+        }
+      ]
+    }
+  }
+}

@@ -173,6 +173,11 @@ Below shows the architecture:
         }
       },
   ```
+
+or
+
+
+
   - VPN Gateway
   ```json
   "vpn_object": {

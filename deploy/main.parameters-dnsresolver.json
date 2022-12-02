@@ -3,18 +3,18 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "resourceGroupName": {
-      "value": "dev-platform"
+      "value": "dev-platform-test"
     },
-    "secretsKeyVault": {
+    "KeyVault": {
       "value": {
-        "kvName": "mykeyvaultmwg",
+        "kvName": "myvault-mwg",
         "resourceGroup": "Shared"
       }
     },
     "namingConvension": {
       "value": {
-        "environment": "prod",
-        "application": "vscode"
+        "environment": "dev",
+        "application": "vs"
       }
     },
     "location": {
@@ -74,7 +74,7 @@
         "addressPrefix": "172.16.24.0/24",
         "subnet": "GatewaySubnet",
         "generation": "Generation1",
-        "keyVaultP2SCert": "p2sroot"
+        "keyVaultP2SCert": "development-cert"
       }
     },
     "vm_object_array": {
@@ -83,7 +83,7 @@
           "name": "dev",
           "adminUsername": "azureuser",
           "vmSize": "Standard_DS1_v2",
-          "keyVaultSSHKey": "sshkey",
+          "keyVaultSSHKey": "ssh-development-public",
           "subnet": "backend",
           "ipaddress": "10.2.0.37",
           "imageReference": {
@@ -100,7 +100,7 @@
               "storageAccountType": "Premium_LRS"
             },
             "deleteOption": "Detach",
-            "diskSizeGB": 30
+            "diskSizeGB": 128
           }
         }
       ]

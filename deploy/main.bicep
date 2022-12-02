@@ -1,12 +1,13 @@
 param resourceGroupName string
 param location string  
 
-param secretsKeyVault object
+param KeyVault object
 param namingConvension object
 
 //parameters for standing of platform
 param vnet_object object 
-param dnsresolver_object object
+param dnsresolver_object object = {}
+param aci_object object = {}
 param vpn_object object
 param vm_object_array array
 
@@ -42,8 +43,8 @@ module naming '../modules/naming.bicep' = {
 
 //KeyVault to pull secrets from
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
-  name: secretsKeyVault.kvName
-  scope: resourceGroup(secretsKeyVault.resourceGroup )
+  name: KeyVault.kvName
+  scope: resourceGroup(KeyVault.resourceGroup )
 }
 
 //Create NSG's for all non-special subnets
@@ -74,7 +75,7 @@ module vnet '../modules/vnet.bicep' = {
 }
 
 //Create Azure Private DNS Resolver
-module dnsresolver '../modules/dnsresolver.bicep' = {
+module dnsresolver '../modules/dnsresolver.bicep' = if (dnsresolver_object != {}) {
   name: 'dnsresolverdeploy'
   scope: rg
   params: {
@@ -87,6 +88,21 @@ module dnsresolver '../modules/dnsresolver.bicep' = {
   ]
 }
 
+//Create Azure Container Instance for custom DNS
+module container '../modules/aci.bicep' =  if (aci_object != {}) {
+  name: 'acideploy'
+  scope: rg
+  params: {
+    location: location
+    naming: naming.outputs.names
+    aci_object: aci_object
+  }
+  dependsOn: [
+    vnet
+  ]
+}
+
+
 //Update VNET with custom DNS Ip Address
 module vnetupdate '../modules/vnet.bicep' = {
   name: 'vnetdeployupdate'
@@ -96,7 +112,7 @@ module vnetupdate '../modules/vnet.bicep' = {
     location: location
     vnet_object: vnet_object
     customdns: [
-      dnsresolver.outputs.ipaddress
+      dnsresolver_object != {} ? dnsresolver.outputs.ipaddress : container.outputs.ipaddress
     ]
   }
   dependsOn: [
