@@ -297,3 +297,7 @@ or
 - [Create VPN Gateway](https://www.getanadmin.com/azure/azure-point-to-site-vpn-setup-step-by-step/)
 - [Setup CA in Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-set-up-and-configure-a-certificate-authority-ca-on-ubuntu-20-04)
 - [Public Key Encryption](https://www.okta.com/identity-101/public-key-encryption/)
+
+
+
+
