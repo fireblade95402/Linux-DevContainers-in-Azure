@@ -1,157 +1,64 @@
-param resourceGroupName string
-param location string  
+@minLength(3)
+@maxLength(20)
+@description('Used to name all resources')
+param resourceName string
 
-param KeyVault object
-param namingConvension object
+param location string = resourceGroup().location
 
-//parameters for standing of platform
-param vnet_object object 
-param dnsresolver_object object = {}
-param aci_object object = {}
-param vpn_object object
-param vm_object_array array
+param deployingUserPrincipalId string
 
-//Loads a list of default shared rules for NSG's
-var sharedRules = json(loadTextContent('./shared-rules.json')).securityRules
+@allowed([
+  'publicIpOnVm'
+])
+param exposureModel string = 'publicIpOnVm'
 
-//command to deploy:  az deployment sub create --name dev --location uksouth --template-file main.bicep --parameters main.parameters.json 
-//Note: Way to start/stop vm's: https://docs.microsoft.com/en-gb/azure/azure-functions/start-stop-vms/overview
-
-// Setting target scope
-targetScope = 'subscription'
-
-// Creating resource group
-resource rg 'Microsoft.Resources/resourceGroups@2021-01-01' = {
-  name: resourceGroupName
-  location: location
-}
-
-//Setup NAming Module
-module naming '../modules/naming.bicep' = {
-  name: 'NamingDeployment'
-  scope: rg
-  params: {
-    location: location
-    suffix: [
-      namingConvension.application
-      namingConvension.environment
-    ]
-    uniqueLength: 6
-    uniqueSeed: rg.id
-  }
-}
-
-//KeyVault to pull secrets from
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
-  name: KeyVault.kvName
-  scope: resourceGroup(KeyVault.resourceGroup )
-}
-
-//Create NSG's for all non-special subnets
-module nsg '../modules/nsg.bicep' = [for subnet in vnet_object.subnets: if (subnet.specialSubnet == false) {
-  name: 'nsg-deployment-${subnet.name}'
-  scope: rg
-  params: {
-    location: location
-    naming: naming.outputs.names
-    suffix: subnet.name
-    secRules: concat(subnet.securityRules, sharedRules)
-  }
-}]
-
-//Create VNET
 module vnet '../modules/vnet.bicep' = {
-  name: 'vnetdeploy'
-  scope: rg
+  name: '${deployment().name}-vnet'
   params: {
-    naming: naming.outputs.names
+    resourceName: resourceName
     location: location
-    vnet_object: vnet_object
     customdns: []
   }
-  dependsOn: [
-    nsg
-  ]
 }
 
-//Create Azure Private DNS Resolver
-module dnsresolver '../modules/dnsresolver.bicep' = if (dnsresolver_object != {}) {
-  name: 'dnsresolverdeploy'
-  scope: rg
+module keyvault '../modules/keyvaultssh/keyvault.bicep' = {
+  name: '${deployment().name}-keyvault'
   params: {
+    resourceName: resourceName
     location: location
-    naming: naming.outputs.names
-    dnsresolver_object: dnsresolver_object
+    createRbacForDeployingUser: true
+    deployingUserPrincipalId: deployingUserPrincipalId
+    logAnalyticsWorkspaceId: '' //No logging right now.
   }
-  dependsOn: [
-    vnet
-  ]
 }
 
-//Create Azure Container Instance for custom DNS
-module container '../modules/aci.bicep' =  if (aci_object != {}) {
-  name: 'acideploy'
-  scope: rg
+module kvSshSecret '../modules/keyvaultssh/ssh.bicep' = {
+  name: '${deployment().name}-kvsshsecret'
   params: {
+    akvName: keyvault.outputs.keyVaultName
     location: location
-    naming: naming.outputs.names
-    aci_object: aci_object
+    sshKeyName: 'vmSsh'
   }
-  dependsOn: [
-    vnet
-  ]
 }
 
-
-//Update VNET with custom DNS Ip Address
-module vnetupdate '../modules/vnet.bicep' = {
-  name: 'vnetdeployupdate'
-  scope: rg
-  params: {
-    naming: naming.outputs.names
-    location: location
-    vnet_object: vnet_object
-    customdns: [
-      dnsresolver_object != {} ? dnsresolver.outputs.ipaddress : container.outputs.ipaddress
-    ]
-  }
-  dependsOn: [
-    dnsresolver
-  ]
+@description('Key Vault reference to the SSH public key secret. Used to pass the public key to the VM module.')
+resource kvRef 'Microsoft.KeyVault/vaults@2022-11-01' existing = {
+  name: keyvault.outputs.keyVaultName
 }
 
-//Creating VPN Gateway
-module vpngateway '../modules/vpngateway.bicep' = {
-  name: 'vpndeploy'
-  scope: rg
+@description('''
+Creates the VM - this module is not idempotent, so it will fail if the VM already exists. To update the VM, delete it first.
+eg. "Changing property 'linuxConfiguration.ssh.publicKeys' is not allowed."
+''')
+module vm '../modules/vm.bicep' = {
+  name: '${deployment().name}-vm'
   params: {
+    resourceName: resourceName
     location: location
-    naming: naming.outputs.names
-    vpn: vpn_object
-    p2scert: keyVault.getSecret(vpn_object.keyVaultP2SCert)
+    exposeVmToPublicInternet: exposureModel=='publicIpOnVm'
+    sshkey: kvRef.getSecret(kvSshSecret.outputs.publicKeySecretName)
+    subnetId: vnet.outputs.backendSubnetId
   }
-  dependsOn: [
-    vnetupdate
-  ]
 }
 
-
-//Creating  VM's
-module virtualMachines '../modules/vm.bicep' = [for vm in vm_object_array :{
-  name: '${vm.name}-vmdeploy'
-  scope: rg
-  params: {
-    location: location
-    naming: naming.outputs.names
-    vm_object: vm
-    sshkey: keyVault.getSecret(vm.keyVaultSSHKey)
-  }
-  dependsOn: [
-    vnetupdate
-  ]
-}]
-
-
-
-
-
+output keyVaultName string = keyvault.outputs.keyVaultName
