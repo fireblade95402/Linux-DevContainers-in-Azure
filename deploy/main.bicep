@@ -4,13 +4,15 @@
 param resourceName string
 
 param location string = resourceGroup().location
-
 param deployingUserPrincipalId string
 
 @allowed([
   'publicIpOnVm'
 ])
 param exposureModel string = 'publicIpOnVm'
+
+@description('When exposureModel is publicIpOnVm, this is the IP address that will be allowed to SSH to the VM. If not specified, any IP address will be allowed which is not good practice.')
+param clientOutboundIpAddress string = ''
 
 module vnet '../modules/vnet.bicep' = {
   name: '${deployment().name}-vnet'
@@ -58,6 +60,17 @@ module vm '../modules/vm.bicep' = {
     exposeVmToPublicInternet: exposureModel=='publicIpOnVm'
     sshkey: kvRef.getSecret(kvSshSecret.outputs.publicKeySecretName)
     subnetId: vnet.outputs.backendSubnetId
+  }
+}
+
+module nsg '../modules/nsg.bicep' = if(exposureModel=='publicIpOnVm') {
+  name: '${deployment().name}-nsg'
+  params: {
+    resourceName: resourceName
+    location: location
+    workspaceRegion: location
+    ruleInAllowSsh: true
+    internetSourceIpAddress: clientOutboundIpAddress
   }
 }
 

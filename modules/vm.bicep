@@ -3,7 +3,11 @@
 @description('Used to name all resources')
 param resourceName string
 
-param vmSize string = 'Standard_B1ms'
+@allowed([
+  'Standard_B1ms' //A very basic VM for light dev work and low hourly compute cost
+  'Standard_D4s_v3' //A more powerful VM that supports nested virtualisation but has a higher hourly compute cost
+])
+param vmSize string = 'Standard_D4s_v3'
 
 param location string = resourceGroup().location
 
@@ -126,4 +130,4 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2022-11-01' = {
   }
 }
 
-
+output dnsFqdn string = publicIPAddress.properties.dnsSettings.fqdn

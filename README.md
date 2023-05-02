@@ -1,7 +1,7 @@
 
 # Overview
 
-The below steps will deployment an Azure environment using a VNET for hosting a private virtual machine and using a VPN Gateway to create a secure private environment for development where developers can use dev containers on VS Code.
+The below steps will deployment an Azure environment using a Virtual Network for hosting a private virtual machine and using a VPN Gateway to create a secure private environment for development where developers can use dev containers on VS Code.
 
 ## Prerequisites
 
@@ -11,11 +11,23 @@ The below steps will deployment an Azure environment using a VNET for hosting a 
 - Access to setup ```ssh-agent``` on developer desktop/laptop
 - Azure [cli](https://docs.microsoft.com/en-us/cli/azure/) and [bicep](https://docs.microsoft.com/azure/azure-resource-manager/bicep/overview?tabs=bicep) installed
 
+## Scenarios
+
+A number of different infrastructure scenarios are supported, which enable this repository to support both simple and more secure configurations.
+
+Scenario | Description | Status
+-------- | ----------- | ------
+Public | A simple "over the internet" scenario which is great for rapid development by a single developer | In QA (wip)
+P2S VPN | Designed for a single developer to use. Leveraging a P2S VPN and DNS resolution via Azure DNS Resolver | Needs refactoring
+Landing Zone | A scaled developer environment that can be joined to the Hub Virtual Network from an Azure Landing Zone implementation | Not started
+
 ## Public Scenario
 
 For simple, cost optimised scenarios the Virtual Machine powering the Dev Container experience can be exposed to the internet directly. An SSH key pair is used to secure access, and a Just In Time rule can be leveraged in the subnet Network Security Group to restrict access to just the calling IP address.
 
-### Deploy the infrastructure
+### Deploy the Azure Infrastructure
+
+#### With Bash
 
 ```bash
 rg=YourResourceGroup
@@ -23,25 +35,36 @@ deployingUser=$(az ad signed-in-user show --query id --out tsv)
 az deployment group create -n devcontdemo -g $RG -f .\deploy\main.bicep -p resourceName=devcontdemo deployingUserPrincipalId=$deployingUser exposureModel=publicIpOnVm
 kvName=az deployment group show -n devcontdemo -g $RG --query properties.outputs.keyVaultName.value -o tsv
 az keyvault secret show --vault-name $kvName -n vmSshPrivate --query value -o tsv
+```
 
+#### With PowerShell
+
+```powershell
+$rg=YourResourceGroup
+$deployingUser=az ad signed-in-user show --query id --out tsv
+$clientPublicIp=(Invoke-WebRequest -uri "https://api.ipify.org/").Content
+
+az deployment group create -n devcontdemo -g $RG -f .\deploy\main.bicep -p resourceName=devcontdemo deployingUserPrincipalId=$deployingUser exposureModel=publicIpOnVm clientOutboundIpAddress=clientPublicIp
+$kvName=az deployment group show -n devcontdemo -g $RG --query properties.outputs.keyVaultName.value -o tsv
+$sshKey=az keyvault secret show --vault-name $kvName -n vmSshPrivate --query value -o tsv
+```
+
+![create azure resources](images/public-arch-resources.png)
+
+### Local workstation configuration
+
+```powershell
+cd $env:userprofile
+mkdir .ssh -ErrorAction SilentlyContinue
+$sshKey | out-file "devmac1.pub" 
+start-service ssh-agent
+ssh-add "$env:userprofile\.ssh\devmac1.pub"
+Test-NetConnection <VM DNS Address> -Port 22
 ```
 
 ## Private Scenario : Point to Site
 
 `todo`
-
-
-
-
-
-
-
-
-
-
----
-
-
 # TO TIDY UP
 
 ## Client
