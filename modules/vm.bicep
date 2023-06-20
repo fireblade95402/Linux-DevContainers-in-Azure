@@ -1,55 +1,64 @@
+@minLength(3)
+@maxLength(20)
+@description('Used to name all resources')
+param resourceName string
 
-// This module creates an Azure Virtual MAchines for vscode development.
-// Parameter example
-// "vm_object_array": {
-//   "value": [
-//     {
-//       "name": "dev",
-//       "adminUsername": "azureuser",
-//       "vmSize": "Standard_DS1_v2",
-//       "keyVaultSSHKey": "sshkey",
-//       "subnet": "backend",
-//       "ipaddress": "10.1.2.5",
-//       "imageReference": {
-//         "publisher": "Canonical",
-//         "offer": "UbuntuServer",
-//         "sku": "18.04-LTS",
-//         "version": "latest"
-//       },
-//       "osDisk": {
-//         "osType": "Linux",
-//         "createOption": "FromImage",
-//         "caching": "ReadWrite",
-//         "managedDisk": {
-//           "storageAccountType": "Premium_LRS"
-//         },
-//         "deleteOption": "Detach",
-//         "diskSizeGB": 30
-//       }
-//     }
-//   ]
-// }
+@allowed([
+  'Standard_B1ms' //A very basic VM for light dev work and low hourly compute cost
+  'Standard_D4s_v3' //A more powerful VM that supports nested virtualisation but has a higher hourly compute cost
+])
+param vmSize string = 'Standard_D4s_v3'
 
-param location string
-param vm_object object
-param naming object
-param tags object = {}
+param location string = resourceGroup().location
+
+param subnetId string
+
+param adminUsername string = 'azureuser'
+
+param exposeVmToPublicInternet bool
+param publicDnsName string = resourceName
 
 @secure()
 param sshkey string
 
-resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
-  name: '${naming.networkInterface.name}-${naming.virtualMachine.slug}-${vm_object.name}'
+var vmName = 'vm-${resourceName}'
+
+var image = {
+  publisher: 'Canonical'
+  offer: 'UbuntuServer'
+  sku: '18.04-LTS'
+  version: 'latest'
+}
+
+resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2022-09-01' = if(exposeVmToPublicInternet) {
+  name: 'pip-${vmName}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static' //ensures that when VM is stopped we don't lose the IP
+    dnsSettings: {
+      domainNameLabel: publicDnsName
+    }
+  }
+}
+
+
+resource nic 'Microsoft.Network/networkInterfaces@2022-09-01' = {
+  name: 'nic-${vmName}'
   location: location
   properties: {
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Static'
-          privateIPAddress: vm_object.ipaddress
+          publicIPAddress: {
+            id: publicIPAddress.id
+          }
+          privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', naming.virtualNetwork.name, vm_object.subnet)
+            id: subnetId
           }
         }
       }
@@ -57,8 +66,8 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
   }
 }
 
-resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
-  name: '${naming.virtualMachine.name}-${vm_object.name}'
+resource virtualMachines 'Microsoft.Compute/virtualMachines@2022-11-01' = {
+  name: vmName
   location: location
   tags: {
     enabled: 'true'
@@ -68,33 +77,33 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: vm_object.vmSize
+      vmSize: vmSize
     }
     storageProfile: {
-      imageReference: vm_object.imageReference
+      imageReference: image
       osDisk: {
-          name: '${naming.managedDisk.name}-${vm_object.name}'
-          osType: vm_object.osDisk.osType
-          createOption:vm_object.osDisk.createOption
-          caching: vm_object.osDisk.caching
+          name: 'disk-${vmName}'
+          osType: 'Linux'
+          createOption: 'FromImage'
+          caching: 'ReadWrite'
           managedDisk: {
-           storageAccountType:vm_object.osDisk.managedDisk.storageAccountType
+           storageAccountType: 'Premium_LRS'
           }
-          deleteOption: vm_object.osDisk.deleteOption
-          diskSizeGB: vm_object.osDisk.diskSizeGB
+          deleteOption: 'Detach'
+          diskSizeGB: 30
       }
       dataDisks: []
     }
     osProfile: {
-      computerName: '${naming.virtualMachine.name}-${vm_object.name}'
-      adminUsername: vm_object.adminUsername
+      computerName: take(vmName,8)
+      adminUsername: adminUsername
       customData: loadFileAsBase64('../scripts/docker-cloud-init.txt')
       linuxConfiguration: {
         disablePasswordAuthentication: true
         ssh: {
           publicKeys: [
             {
-              path: '/home/${vm_object.adminUsername}/.ssh/authorized_keys'
+              path: '/home/${adminUsername}/.ssh/authorized_keys'
               keyData: sshkey
             }
           ]
@@ -121,4 +130,4 @@ resource virtualMachines 'Microsoft.Compute/virtualMachines@2021-11-01' = {
   }
 }
 
-
+output dnsFqdn string = publicIPAddress.properties.dnsSettings.fqdn

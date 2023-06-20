@@ -1,63 +1,57 @@
-
-// This module creates an Azure VPN with subnets.
-// Parameter example
-// "vnet_object": {
-//   "value": {
-//       "addressPrefix": "10.1.0.0/16",
-//       "subnets" : [
-//         {
-//           "name": "customdns",
-//           "addressSpace": "10.1.3.0/24",
-//           "specialSubnet": false,
-//           "securityRules": [],
-//           "delegations": [
-//             {
-//               "name": "delegationService",
-//               "properties": {
-//                 "serviceName": "Microsoft.ContainerInstance/containerGroups"
-//               }
-//             }
-//           ]
-//         }
-//       ]
-//     }
-// }
-
-// customdns : IP Address of the custom DNS server. THis case created in ACI
-
+@minLength(3)
+@maxLength(20)
+@description('Used to name all resources')
+param resourceName string
 param location string = resourceGroup().location
-param naming object
-param vnet_object object
 param customdns array
-param tags object = {}
 
-targetScope = 'resourceGroup'
-
-resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
-  name: naming.virtualNetwork.name
+resource vnet 'Microsoft.Network/virtualNetworks@2022-09-01' = {
+  name: 'vnet-${resourceName}'
   location: location
   properties: {
     addressSpace: {
       addressPrefixes: [
-        vnet_object.AddressPrefix
+        '10.2.0.0/25'
       ]
     }
-    subnets: [for subnet in vnet_object.subnets: {
-      name: subnet.name
-      properties: {
-        networkSecurityGroup: ((subnet.specialSubnet == false ) ? {
-          id: resourceId('Microsoft.Network/networkSecurityGroups', '${naming.networkSecurityGroup.name}-${subnet.name}')
-        } : null)
-        addressPrefix: subnet.addressSpace
-        delegations: subnet.delegations
+    subnets: [
+      {
+        name: 'GatewaySubnet'
+        properties: {
+          addressPrefix: '10.2.0.0/29'
+        }
       }
-    }]
+      {
+        name: 'dnsresolver'
+        properties: {
+          addressPrefix: '10.2.0.16/28'
+          delegations: [
+            {
+              name: 'delegationService'
+              properties: {
+                serviceName: 'Microsoft.Network/dnsResolvers'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: 'backend'
+        properties: {
+          addressPrefix: '10.2.0.32/27'
+        }
+      }
+      {
+        name: 'frontend'
+        properties: {
+          addressPrefix: '10.2.0.64/27'
+        }
+      }
+    ]
     dhcpOptions: {
       dnsServers: customdns
     }
   }
 }
 
-
-
-
+output backendSubnetId string = vnet.properties.subnets[2].id
